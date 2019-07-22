@@ -4,9 +4,9 @@ Requirements to Run Code:
 
 If python 3 and node.js not installed already:
 
-Download Newest version of python from this link https://www.python.org/downloads/
-  
-Download Newest version of Node.js from this link https://nodejs.org/en/download/
+    Download Newest version of python from this link https://www.python.org/downloads/
+
+    Download Newest version of Node.js from this link https://nodejs.org/en/download/
 
 
 
