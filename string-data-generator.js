@@ -1,10 +1,13 @@
 var asciiRange = [97, 122];
+
+//generate random int from min to max-1
 function getRandomInt(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
 }
 
+//generate random string of any length between min and max length inclusive using characters specified by ascii range variable
 function generateRandomString(minLen, maxLen){
 	var resultString = "";
 	
@@ -15,7 +18,8 @@ function generateRandomString(minLen, maxLen){
 	return resultString;
 }
 
-function convertStringToVec(input, type){
+//converts string to one-hot encoded (type = 1) eg. [[0, 0, 1, 0, 1, 0, 1],[1, 0, 0, 0, 0, 1, 1], [....], ....]  or character count vectors (type = 0) [2, 8, 1, 5, 4, ......]
+function convertStringToVec(input, type, max_length){
 	//var asciiRange = [32, 126];
 	//console.log(type);
 	if(type == 0){
@@ -31,7 +35,7 @@ function convertStringToVec(input, type){
 
 		return vec;
 	} else {
-		var vec = new Array(8).fill(new Array((asciiRange[1]+1)-asciiRange[0]).fill(0));
+		var vec = new Array(max_length).fill(new Array((asciiRange[1]+1)-asciiRange[0]).fill(0));
 		
 		var final_vec = [];
 
@@ -50,7 +54,8 @@ function convertStringToVec(input, type){
 }
 
 
-
+//pick randomly from 4 functions (replace, charAt, add, substring) and apply one to the input string 
+//returns a tuple array: [output string, function number] 
 function applyRandomFunction(input){
 	var numberOfFunctions = 4;
 	var functionNumber = getRandomInt(1, numberOfFunctions+1);
@@ -103,6 +108,7 @@ function applyRandomFunction(input){
 	return out;
 }
 
+//subtracts two integer arrays
 function subtractOneHotVecs(vec1, vec2){
 	var newVec = new Array(vec1.length)
 
@@ -112,15 +118,11 @@ function subtractOneHotVecs(vec1, vec2){
 	return newVec;
 }
 
-// var randomString = generateRandomString(1,10);
-// console.log(randomString);
-// var output = applyRandomFunction(randomString);
-// console.log(output[0]);
-// console.log(convertStringToVec(output[0]).toString());
-// console.log("\n");
-// console.log(convertStringToVec(randomString).toString());
 
-function generateData(ammountOfData, numberOfFunctions, vecType){
+//generates data and saves it to file named string_data.csv
+//each row of the new data consists of [vector of input string, vector of output string, functions one hot vector] 
+//or [vector of input string, vector of output string, subtraction of vectors, functions one hot vector]
+function generateData(ammountOfData, numberOfFunctions, vecType, max_string_length){
 	const fs = require('fs');
 	var fd = fs.openSync("string_data.csv", 'w');
 	var data = new Array(ammountOfData);
@@ -130,22 +132,20 @@ function generateData(ammountOfData, numberOfFunctions, vecType){
 		var functionsUsed = [];
 		var randomString = generateRandomString(1, 5);
 		var inputString = randomString;
-		var inputStringOneHot = convertStringToVec(randomString, vecType);
+		var inputStringOneHot = convertStringToVec(randomString, vecType, max_string_length);
 		var outputString = "";
 		var finalString = "";
-		//console.log(inputString);
 		for(var j = 1; j <= numFunctionsToApply; j++){
 			outputString = applyRandomFunction(inputString);
 			while(functionsUsed.includes(outputString[1])){
 				outputString = applyRandomFunction(inputString);
 			}
-			//console.log(outputString);
 			functionsUsed.push(outputString[1]);
 			inputString = outputString[0];
 		}
 		finalString = inputString;
 		
-		var outputStringOneHot = convertStringToVec(inputString, vecType);
+		var outputStringOneHot = convertStringToVec(inputString, vecType, max_string_length);
 		for(var k = 0; k < functionsUsed.length; k++){
 			funcOneHot[functionsUsed[k]-1] = 1;
 		}
@@ -161,12 +161,7 @@ function generateData(ammountOfData, numberOfFunctions, vecType){
   		
   		var bytes = fs.writeSync(fd, writeData+"\n", null, null);
 		
-		// var print = "";
-		// for(var index = 0; index < row.length; index++){
-		// 	print += ("["+row[index]+"],");
-		// }
-		// console.log(print);
-
+		
 
 
 
@@ -176,4 +171,4 @@ function generateData(ammountOfData, numberOfFunctions, vecType){
 	return data;
 }
 
-generateData(100000, 4, 1);
+generateData(100000, 4, 1, 8);
