@@ -12,7 +12,7 @@ If python 3 and node.js not installed already:
 
 Run command: pip install requirements.txt (from this repo)
 
-Run command: npm install mathjs esprima function-extractor
+Run command: npm install mathjs esprima function-extractor readline-sync
 
 
   
