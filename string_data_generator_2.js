@@ -23,7 +23,7 @@ function generateRandomString(minLen, maxLen){
 }
 
 var readlineSync = require('readline-sync');
-var asciiRange = [48, 90];
+var asciiRange = [32, 90];
 
 
 var data;
@@ -34,11 +34,11 @@ function convertStringToVec(input, type, max_length){
   //console.log(type);
   if(type == "basic"){
     
-    var vec = new Array((asciiRange[1]+1)-asciiRange[0]).fill(0);
+    var vec = new Array(max_length).fill(0);
 
 
     for(var i = 0; i < input.length; i++){
-      vec[(input.charAt(i).charCodeAt(0))-asciiRange[0]] += 1;
+      vec[i] = (input.charAt(i).charCodeAt(0))-asciiRange[0];
     }
 
     
@@ -81,25 +81,36 @@ function getFunctionsUsed(composite){
   }
   return functionsUsed;
 }
-function printArr(arr) {
-  let str = "";
-  for (let item of arr) {
-    if (Array.isArray(item)) str += printArr(item);
-    else str += item + ", ";
+
+
+function subtractOneHotVecs(vec1, vec2){
+  var newVec = new Array(vec1.length)
+
+  for(var i = 0; i < newVec.length; i++){
+    newVec[i] = Math.abs(vec1[i]-vec2[i]);
   }
-  return str;
+  return newVec;
 }
+
+// const fs = require('fs');
+// var fd = fs.openSync("test.csv", 'w');
+// var final_row = [convertStringToVec("Kai/More", "one-hot", 8), convertStringToVec("K:M:", "one-hot", 8)]
+// var writeData = final_row.toString();
+// fs.appendFileSync('test.csv', writeData+"\n");
+
+// console.log("done");
 
 var counter = 1;
 var fileinput = require('fileinput');
 const fs = require('fs');
-var fd = fs.openSync("string_data_2.csv", 'w');
+var fd = fs.openSync("string_data_full.csv", 'w');
 
-fileinput.input("random_functions.csv")
+fileinput.input("random_functions_long_shuffled.csv")
   .on('line', function(line) {
 
     var func = line.toString();
-    var input = generateRandomString(1, 5);
+    var input = generateRandomString(1, 20);
+    // var input = "POTATO0123"
     var functionsUsedOneHot = new Array(10).fill(0);
     var functions = getFunctionsUsed(func);
     //console.log('(set-logic ALL)\n' + func + '(declare-fun x () String)\n(assert (= x (f "'+ input +'")))\n(check-sat)\n(get-value (x))\n\n\n\n')
@@ -114,27 +125,33 @@ fileinput.input("random_functions.csv")
   
   
 
-
+try{
   fs.writeFileSync('function.smt2', data, (err) => { 
       
     // In case of a error throw err. 
-    if (err) throw err; 
   }) 
 
 
   var execSync = require('child_process').execSync, output;
   output = execSync('cvc4 -m function.smt2').toString().split("\n")[1].split('"')[1];
   var final_row = [];
-  if(output != "" && output.length <= 8){
+
+  if(output != "" && output.length <= 20){
+    //console.log(output)
     console.log(counter);
-    final_row = [input, output, convertStringToVec(input, "one-hot", 8), convertStringToVec(output, "one-hot", 8), functionsUsedOneHot];
+    // input_vec = convertStringToVec(input, "one-hot", 20)
+    // output_vec = convertStringToVec(output, "one-hot", 20)
+    final_row = [convertStringToVec(input, "basic", 20), convertStringToVec(output, "basic", 20), functionsUsedOneHot];
+    //final_row = [subtractOneHotVecs(input_vec, output_vec), convertStringToVec(output, "one-hot", 20), functionsUsedOneHot]
 
 
-
-    var writeData = printArr(final_row);
-    fs.appendFileSync('string_data_2.csv', writeData+"\n");
+    var writeData = final_row.toString();
+    fs.appendFileSync('string_data_full.csv', writeData+"\n");
     counter++;
   }
+} catch(err){
+
+}
 
   
 
