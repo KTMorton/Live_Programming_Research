@@ -92,6 +92,14 @@ function subtractOneHotVecs(vec1, vec2){
   return newVec;
 }
 
+function getInvOneHot(vec){
+  var outVec = [];
+  for(var i = 0; i < vec.length; i++){
+    outVec.push(Math.abs(vec[i]-1));
+  }
+  return outVec;
+}
+
 // const fs = require('fs');
 // var fd = fs.openSync("test.csv", 'w');
 // var final_row = [convertStringToVec("Kai/More", "one-hot", 8), convertStringToVec("K:M:", "one-hot", 8)]
@@ -103,7 +111,7 @@ function subtractOneHotVecs(vec1, vec2){
 var counter = 1;
 var fileinput = require('fileinput');
 const fs = require('fs');
-var fd = fs.openSync("string_data_full.csv", 'w');
+var fd = fs.openSync("string_data_full_filter.csv", 'w');
 
 fileinput.input("random_functions_long_shuffled.csv")
   .on('line', function(line) {
@@ -141,12 +149,12 @@ try{
     console.log(counter);
     // input_vec = convertStringToVec(input, "one-hot", 20)
     // output_vec = convertStringToVec(output, "one-hot", 20)
-    final_row = [convertStringToVec(input, "basic", 20), convertStringToVec(output, "basic", 20), functionsUsedOneHot];
+    final_row = [convertStringToVec(input, "basic", 20), convertStringToVec(output, "basic", 20), getInvOneHot(functionsUsedOneHot)];
     //final_row = [subtractOneHotVecs(input_vec, output_vec), convertStringToVec(output, "one-hot", 20), functionsUsedOneHot]
 
 
     var writeData = final_row.toString();
-    fs.appendFileSync('string_data_full.csv', writeData+"\n");
+    fs.appendFileSync('string_data_full_filter.csv', writeData+"\n");
     counter++;
   }
 } catch(err){

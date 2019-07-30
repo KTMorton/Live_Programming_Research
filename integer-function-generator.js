@@ -162,7 +162,7 @@ for(i = 0; i < operatorPerms.length; i++){
 
 for(i = 0; i < newCodeSnippets.length; i++){
 	var operators = [];
-	//console.log(newCodeSnippets[i]);
+	console.log(newCodeSnippets[i]);
 	esprima.parseScript(newCodeSnippets[i], {}, function (node) {
  	//console.log(node.tokens);
  	if(node.property != undefined){
