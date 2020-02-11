@@ -1,6 +1,9 @@
+function getInput(question){
+  var qAnswer = readlineSync.question(question);
+  
+  return qAnswer;
+}
 
-
-//generate random int from min to max-1
 function getRandomInt(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
@@ -9,34 +12,33 @@ function getRandomInt(min, max) {
 
 //generate random string of any length between min and max length inclusive using characters specified by ascii range variable
 function generateRandomString(minLen, maxLen){
-	var resultString = "";
-	
-	var length = getRandomInt(minLen, maxLen+1);
-	for(var i = 1; i <= length; i++){
-		resultString += String.fromCharCode(getRandomInt(asciiRange[0], asciiRange[1]+1));
-	}
-	return resultString;
+  var resultString = "";
+  
+  var length = getRandomInt(minLen, maxLen+1);
+  for(var i = 1; i <= length; i++){
+      resultString += String.fromCharCode(getRandomInt(asciiRange[0], asciiRange[1]+1));
+    
+  }
+  return resultString;
 }
 
-function getInvOneHot(vec){
-	var outVec = [];
-	for(var i = 0; i < vec.length; i++){
-		outVec.push(Math.abs(vec[i]-1));
-	}
-	return outVec;
-}
+var readlineSync = require('readline-sync');
+var asciiRange = [32, 90];
 
-//converts string to one-hot encoded (type = 1) eg. [[0, 0, 1, 0, 1, 0, 1],[1, 0, 0, 0, 0, 1, 1], [....], ....]  or character count vectors (type = 0) [2, 8, 1, 5, 4, ......]
+
+var data;
+
+
 function convertStringToVec(input, type, max_length){
   //var asciiRange = [32, 126];
   //console.log(type);
   if(type == "basic"){
     
-    var vec = new Array((asciiRange[1]+1)-asciiRange[0]).fill(0);
+    var vec = new Array(max_length).fill(0);
 
 
     for(var i = 0; i < input.length; i++){
-      vec[(input.charAt(i).charCodeAt(0))-asciiRange[0]] += 1;
+      vec[i] = (input.charAt(i).charCodeAt(0)+1)-asciiRange[0];
     }
 
     
@@ -68,173 +70,187 @@ function convertStringToVec(input, type, max_length){
   }
 }
 
-
-//pick randomly from 4 functions (replace, charAt, add, substring) and apply one to the input string 
-//returns a tuple array: [output string, function number] 
-function applyRandomFunction(input){
-	var functionNumber = getRandomInt(1, numberOfFunctions+1);
-	var outStr = "";
-	var out = new Array(2); 
-
-
-	switch(functionNumber){
-		case 1:
-			//var asciiRange = [32, 126];
-			
-			var randomPos;
-			var randomChar = String.fromCharCode(getRandomInt(asciiRange[0], asciiRange[1]+1));
-			randomPos = getRandomInt(0, input.length);
-			outStr = input.replace(input[randomPos], randomChar)
-			// if(Math.random() < 0.85){
-			// 	var randomChar = String.fromCharCode(getRandomInt(asciiRange[0], asciiRange[1]+1));
-			// 	randomPos = getRandomInt(0, input.length);
-			// 	outStr = input.replace(input[randomPos], randomChar)
-			// } else {
-				
-			// 	randomPos = [];
-			// 	randomPos.push(getRandomInt(0, input.length-1));
-			// 	randomPos.push(getRandomInt(randomPos[0], input.length));
-			// 	//console.log(randomPos.toString());
-			// 	var randomChars = generateRandomString((randomPos[1]-randomPos[0]), (randomPos[1]-randomPos[0])+1);
-			// 	//console.log(randomChars.toString());
-			// 	outStr = input.replace(input.substring(randomPos[0], randomPos[1]+1), randomChars);
-
-			// }
-			
-			break;
-		case 2:
-			outStr = input[getRandomInt(0, input.length)];
-			break;
-		
-		case 3:
-			var randomPos = [];
-			randomPos.push(getRandomInt(0, input.length-2));
-			randomPos.push(randomPos[0]+2);
-			subStr = input.substring(randomPos[0], randomPos[1]+1);
-			outStr = input + subStr;
-			break;
-
-		case 4:
-			var randomPos = [];
-			randomPos.push(getRandomInt(0, input.length-1));
-			randomPos.push(getRandomInt(randomPos[0], input.length));
-			outStr = input.substring(randomPos[0], randomPos[1]+1);
-			break;
-
-	}
-	out = [outStr, functionNumber];
-	return out;
+function getFunctionsUsed(composite, outType){
+  var functionsUsed = [];
+  var possibleFunctionsStr = ["str.++", "str.replace", "str.at", "int.to.str", "str.substr", "(+", "(-", "str.len", "str.to.int", "str.indexof"];
+  var possibleFunctionsBool = ["str.++", "str.replace", "str.at", "int.to.str", "str.substr", "(+", "(-", "str.len", "str.to.int", "str.indexof", "str.contains", "str.prefixof", "str.suffixof"];
+  var possibleFunctions = possibleFunctionsStr
+  if(outType == "Bool"){
+    possibleFunctions = possibleFunctionsBool
+  }
+  for(var i = 0; i < possibleFunctions.length; i++){
+    if(composite.includes(possibleFunctions[i])){
+      functionsUsed.push(i);
+    }
+  }
+  return functionsUsed;
 }
 
-//subtracts two integer arrays
+
 function subtractOneHotVecs(vec1, vec2){
-	var newVec = new Array(vec1.length)
+  var newVec = new Array(vec1.length)
 
-	for(var i = 0; i < newVec.length; i++){
-		newVec[i] = Math.abs(vec1[i]-vec2[i]);
-	}
-	return newVec;
+  for(var i = 0; i < newVec.length; i++){
+    newVec[i] = Math.abs(vec1[i]-vec2[i]);
+  }
+  return newVec;
+}
+
+function getInvOneHot(vec){
+  var outVec = [];
+  for(var i = 0; i < vec.length; i++){
+    outVec.push(Math.abs(vec[i]-1));
+  }
+  return outVec;
 }
 
 
-//generates data and saves it to file named string_data.csv
-//each row of the new data consists of [vector of input string, vector of output string, functions one hot vector] 
-//or [vector of input string, vector of output string, subtraction of vectors, functions one hot vector]
-function generateData(ammountOfData, vecType, max_string_length, maxFunctionsToApply, vecSubtraction, toggleFilter){
-	const fs = require('fs');
-	var fd = fs.openSync("string_data.csv", 'w');
-	var data = new Array(ammountOfData);
-	for(var i = 1; i <= ammountOfData; i++){
-		var numFunctionsToApply = getRandomInt(1,maxFunctionsToApply+1);
-		var funcOneHot = new Array(numberOfFunctions).fill(0);
-		var functionsUsed = [];
-		var randomString = generateRandomString(1, max_string_length-3);
-		var inputString = randomString;
-		var inputStringOneHot = convertStringToVec(randomString, vecType, max_string_length);
-		var outputString = "";
-		var finalString = "";
-		for(var j = 1; j <= numFunctionsToApply; j++){
-			outputString = applyRandomFunction(inputString);
-			while(functionsUsed.includes(outputString[1])){
-				outputString = applyRandomFunction(inputString);
-			}
-			functionsUsed.push(outputString[1]);
-			inputString = outputString[0];
-		}
-		finalString = inputString;
-		
-		var outputStringOneHot = convertStringToVec(inputString, vecType, max_string_length);
-		for(var k = 0; k < functionsUsed.length; k++){
-			funcOneHot[functionsUsed[k]-1] = 1;
-		}
 
-		if(toggleFilter){
-			funcOneHot = getInvOneHot(funcOneHot);
-		}
+// const fs = require('fs');
+// var fd = fs.openSync("test.csv", 'w');
+// var final_row = [convertStringToVec("Kai/More", "one-hot", 8), convertStringToVec("K:M:", "one-hot", 8)]
+// var writeData = final_row.toString();
+// fs.appendFileSync('test.csv', writeData+"\n");
 
-		if(vecSubtraction){
-			var row = [randomString, finalString, functionsUsed, inputStringOneHot, outputStringOneHot, subtractOneHotVecs(outputStringOneHot, inputStringOneHot), funcOneHot];
-		} else {
-			var row = [randomString, finalString, functionsUsed, inputStringOneHot, outputStringOneHot, funcOneHot];
-		}
+// console.log("done");
 
-		data.push(row);
+function generateData(ammountOfData, inType, outType, inFile, outFile, numPossibleFunctions){
 
-		
+var counter = 0;
+
+
+//var num_Examples = 4;
+var fileinput = require('fileinput');
+const fs = require('fs');
+var fd = fs.openSync(outFile, 'w');
+
+fileinput.input(inFile)
+  .on('line', function(line) {
+    if(counter >= ammountOfData){
+      return "done";
+    }
   
-		// Data which will write in a file. 
-		var writeData = row.slice(3,row.length).toString();
-		console.log(i);
-  		
-  		var bytes = fs.writeSync(fd, writeData+"\n", null, null);
-		
-		
+    var func = line.toString();
+    // var input = generateRandomString(1, 20);
+    var input_list = []
+    var output_list = []
+    // var input = "POTATO0123"
+    var functionsUsedOneHot = new Array(numPossibleFunctions).fill(0);
+    var functions = getFunctionsUsed(func);
+    //console.log('(set-logic ALL)\n' + func + '(declare-fun x () String)\n(assert (= x (f "'+ input +'")))\n(check-sat)\n(get-value (x))\n\n\n\n')
+    //console.log(func);
+
+    for(var k = 0; k < functions.length; k++){
+      functionsUsedOneHot[functions[k]] = 1;
+    }
+  // var final_row = [];
+  // var while_counter = 0;
+  // while(input_list.length < num_Examples && while_counter < 10){
+  // while_counter += 1;
+  if(inType == "String"){
+    var input = generateRandomString(1, 20);
+    // Data which will write in a file. 
+    var data = '(set-logic ALL)\n' + func + '(declare-fun x () '+outType+')\n(assert (= x (f "'+ input +'")))\n(check-sat)\n(get-value (x))'
+  } else {
+    var input = getRandomInt(1, 10)
+    var data = '(set-logic ALL)\n' + func + '(declare-fun x () '+outType+')\n(assert (= x (f '+ input +')))\n(check-sat)\n(get-value (x))'
+  }
+
+  // console.log(data)
+  
+  
+  
+
+try{
+  fs.writeFileSync('function.smt2', data, (err) => { 
+      
+    // In case of a error throw err. 
+  }) 
+
+
+  var execSync = require('child_process').execSync, output;
+  var output = execSync('cvc4 -m function.smt2').toString().split("\n")[1]
+  // console.log(output)
+  var new_output;
+  if(outType == "String"){
+    new_output = output.split('"')[1];
+  } else {
+    new_output = output.slice(output.indexOf(" ")+1,output.indexOf(")"))
+
+  }
+  var final_row = [];
+  // console.log(new_output)
+  // console.log(input)
+  // console.log(line.toString())
+  // console.log(new_output)
+  if(new_output != "" && new_output.length <= 20){
+    console.log(new_output)
+    // input_list.push(input);
+    // output_list.push(output);
+
+    if(inType == "String"){
+      var input_vec = convertStringToVec(input, "basic", 20)
+    } else {
+       var input_vec = input
+    }
 
 
 
+    if(outType == "String"){
+      var output_vec = convertStringToVec(new_output, "basic", 20)
+    } else if (outType == "Int") {
+      var output_vec = parseInt(new_output);
+    } else {
+      var output_vec = (new_output == 'true');
+      if (output_vec){
+        output_vec = 1
+      } else {
+        output_vec = 0
+      }
 
-	}
-	fs.closeSync(fd);
-	return data;
+    }
+
+
+    // console.log(output)
+    
+
+
+
+    // output_vec = convertStringToVec(output, "one-hot", 20)
+
+    final_row = [input_vec, output_vec, functionsUsedOneHot];
+    //final_row = [subtractOneHotVecs(input_vec, output_vec), convertStringToVec(output, "one-hot", 20), functionsUsedOneHot]
+    var writeData = final_row.toString();
+    fs.appendFileSync(outFile, writeData+"\n");
+    counter++;
+    console.log(counter);
+
+
+    
+  }
+} catch(err){
+
 }
 
-var readlineSync = require('readline-sync');
-
-function getInput(question){
-	var qAnswer = readlineSync.question(question);
-	
-	return qAnswer;
+//}
+//   if(while_counter < 10){
+//   console.log(counter);
+//   for(var i = 0; i < num_Examples; i++){
+//     final_row.push(convertStringToVec(input_list[i], "basic", 20))
+//     final_row.push(convertStringToVec(output_list[i], "basic", 20))
+//   }
+//   final_row.push(functionsUsedOneHot)
+//   var writeData = final_row.toString();
+//   fs.appendFileSync('string_data_full_multi.csv', writeData+"\n");
+//   counter++;
+// }
+});
 }
 
+generateData(150000, "Int", "String", "/Users/kairotieremorton/all_functions/random_functions_int_str_shuffled.csv", "int_str_data.csv", 10)
 
-var asciiRange = [97, 122];
 
-var asciiRange = getInput("Enter the ascii range: ").split("-").map(function (x) { 
-   return parseInt(x, 10); 
-}); 
 
-var numRows = parseInt(getInput("Enter the amount of data: "), 10);
-
-var maxStringLength = parseInt(getInput("Enter the maximum string length: "), 10);
-
-var encoding = "one-hot";
-
-if(getInput("Do you want one-hot encoding (y/n): ").toLowerCase() == "n"){
-	encoding = "basic";
-}
-
-var filter = false;
-if(getInput("Do you want to toggle filter mode (y/n): ").toLowerCase() == "y"){
-	filter = true;
-}
-
-var numberOfFunctions = 4;
-
-if(getInput("Do you want the subtracted vectors as a column (y/n): ").toLowerCase() == "y"){
-	generateData(numRows, encoding, maxStringLength, 2, true, filter);
-} else {
-	generateData(numRows, encoding, maxStringLength, 2, false, filter);
-}
 
 
 
