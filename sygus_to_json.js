@@ -1,4 +1,4 @@
-//Converts Sygus Benchmarks to json format for neural network
+//Converts Sygus Benchmarks (inputs/outputs only) to json format for neural network
 
 var asciiRange = [32, 90];
 
