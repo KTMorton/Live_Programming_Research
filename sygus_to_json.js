@@ -1,4 +1,5 @@
 //Converts Sygus Benchmarks (inputs/outputs only) to json format for neural network
+//used for prediction after the NN for criticality has already been trained.
 
 var asciiRange = [32, 90];
 
